@@ -20,7 +20,7 @@ func GetChunkType(raw []byte) int {
 	if len(raw) != 4 {
 		log.Fatal("Chunk Type invalid length")
 	}
-	if raw[3] == '3' {
+	if raw[2] == 0x68 {
 		return MThd
 	} else {
 		return MTrk

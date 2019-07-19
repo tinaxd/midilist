@@ -9,9 +9,17 @@ import (
 func main() {
 	lexer := midi.NewLexer("./test.mid")
 	lexer.LoadData()
-	token := lexer.NextToken()
+	token, _ := lexer.NextToken()
 	fmt.Printf("%s\n", token.String())
-	token = lexer.NextToken()
-	fmt.Printf("%s\n", token.String())
+	parser := midi.NewChunkParser(token)
+	fmt.Printf("%s\n", parser.ParseMThd().String())
+	for {
+		tok, err := lexer.NextToken()
+		if err != nil {
+			break
+		}
+		fmt.Printf("%s\n", tok.String())
+		break
+	}
 	//lexer.TestFunc()
 }

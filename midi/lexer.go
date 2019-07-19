@@ -58,22 +58,42 @@ func (lexer *Lexer) LoadData2() {
 }
 
 func (lexer *Lexer) NextNByte(length uint) []byte {
-	len := int(length)
-	ret := lexer.data[lexer.pointer : lexer.pointer+len]
-	lexer.pointer += len
+	leng := int(length)
+	if len(lexer.data) <= lexer.pointer+leng {
+		return nil
+	}
+	ret := lexer.data[lexer.pointer : lexer.pointer+leng]
+	lexer.pointer += leng
 	return ret
 }
 
-func (lexer *Lexer) NextToken() Chunk {
+type MidiError struct {
+	Message string
+}
+
+func (le *MidiError) Error() string {
+	return fmt.Sprintf("MidiError: %s", le.Message)
+}
+
+func (lexer *Lexer) NextToken() (*Chunk, error) {
 	chunktype := lexer.NextNByte(4)
+	if chunktype == nil {
+		return &Chunk{}, &MidiError{"EOF"}
+	}
 	lengthR := lexer.NextNByte(4)
+	if lengthR == nil {
+		return &Chunk{}, &MidiError{"EOF"}
+	}
 	length := binary.BigEndian.Uint32(lengthR)
 	data := lexer.NextNByte(uint(length))
-	return Chunk{
+	if data == nil {
+		return &Chunk{}, &MidiError{"EOF"}
+	}
+	return &Chunk{
 		GetChunkType(chunktype),
 		uint(length),
 		data,
-	}
+	}, nil
 }
 
 func (lexer *Lexer) TestFunc() {
