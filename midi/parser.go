@@ -2,6 +2,7 @@ package midi
 
 import (
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -19,7 +20,7 @@ func NewChunkParser(chunk *Chunk) *ChunkParser {
 
 func (cp *ChunkParser) nextNByte(length uint) []byte {
 	leng := int(length)
-	if len(cp.Chunk.Data) <= cp.pointer+leng {
+	if len(cp.Chunk.Data) < cp.pointer+leng {
 		return nil
 	}
 	ret := cp.Chunk.Data[cp.pointer : cp.pointer+leng]
@@ -97,7 +98,7 @@ func (cp *ChunkParser) ParseEventPair() (EventPair, error) {
 	//log.Printf("DeltaTime: %d\n", deltaTime)
 	event, err := cp.ParseEvent()
 	if err != nil {
-		return EventPair{}, errors.New("invalid event")
+		return EventPair{}, err
 	}
 	//log.Printf("%v\n", event)
 	return EventPair{uint32(deltaTime), event}, nil
@@ -118,11 +119,14 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 			event, err = cp.parseMetaEventTimeSignature()
 		case 0x06:
 			event, err = cp.parseMetaEventMarker()
+		case 0x2f:
+			event, err = cp.parseMetaEventEndOfTrack()
 		default:
-			event, err = nil, errors.New("invalid event")
+			msg := fmt.Sprintf("unknown meta event: FF %X", metaType)
+			event, err = nil, errors.New(msg)
 		}
 	} else {
-		event, err = nil, errors.New("invalid event")
+		event, err = nil, errors.New("unknown event")
 	}
 	if err != nil {
 		return nil, err
@@ -169,4 +173,12 @@ func (cp *ChunkParser) parseMetaEventMarker() (Event, error) {
 	_, text := cp.parseMetaEventLengthTextHelper()
 	event := MetaEvent{6, &Marker{text}}
 	return &event, nil
+}
+
+func (cp *ChunkParser) parseMetaEventEndOfTrack() (Event, error) {
+	check := cp.nextByte()
+	if check != byte(0) {
+		return &MetaEvent{0x2f, &EndOfTrack{}}, errors.New("invalid End of Track event")
+	}
+	return &MetaEvent{0x2f, &EndOfTrack{}}, nil
 }
