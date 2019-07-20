@@ -143,3 +143,12 @@ func (self *TimeSignature) String() string {
 	return fmt.Sprintf("TimeSignature: %d/%d %d %d",
 		self.Numerator, self.Denominator, self.Clocks, self.Notes)
 }
+
+type Marker struct {
+	Name string
+}
+
+func (self *Marker) MetaEventData() {}
+func (self *Marker) String() string {
+	return fmt.Sprintf("Marker: %s", self.Name)
+}

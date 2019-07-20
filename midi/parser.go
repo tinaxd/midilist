@@ -116,6 +116,8 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 			event, err = cp.parseMetaEventSequenceTrackName()
 		case 0x58:
 			event, err = cp.parseMetaEventTimeSignature()
+		case 0x06:
+			event, err = cp.parseMetaEventMarker()
 		default:
 			event, err = nil, errors.New("invalid event")
 		}
@@ -136,15 +138,13 @@ func (cp *ChunkParser) parseMetaEventSetTempo() (Event, error) {
 	return &event, nil
 }
 
-func (cp *ChunkParser) parseMetaEventSequenceTrackName() (Event, error) {
-	length := uint(cp.nextNByte(1)[0])
+func (cp *ChunkParser) parseMetaEventLengthTextHelper() (uint, string) {
+	length := uint(cp.nextByte())
 	if length == 0 {
-		event := MetaEvent{3, &TrackName{""}}
-		return &event, nil
+		return length, ""
 	} else {
-		name := string(cp.nextNByte(length))
-		event := MetaEvent{3, &TrackName{name}}
-		return &event, nil
+		text := string(cp.nextNByte(length))
+		return length, text
 	}
 }
 
@@ -156,5 +156,17 @@ func (cp *ChunkParser) parseMetaEventTimeSignature() (Event, error) {
 	notes := cp.nextByte()
 
 	event := MetaEvent{58, &TimeSignature{numerator, denominator, clocks, notes}}
+	return &event, nil
+}
+
+func (cp *ChunkParser) parseMetaEventSequenceTrackName() (Event, error) {
+	_, text := cp.parseMetaEventLengthTextHelper()
+	event := MetaEvent{3, &TrackName{text}}
+	return &event, nil
+}
+
+func (cp *ChunkParser) parseMetaEventMarker() (Event, error) {
+	_, text := cp.parseMetaEventLengthTextHelper()
+	event := MetaEvent{6, &Marker{text}}
 	return &event, nil
 }
