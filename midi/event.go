@@ -1,8 +1,16 @@
 package midi
 
+import "fmt"
+
 type EventPair struct {
-	DeltaTime int32
+	DeltaTime uint32
 	Event     Event
+}
+
+func (ep *EventPair) MidiElement() {}
+
+func (ep *EventPair) String() string {
+	return fmt.Sprintf("Time: %d, Event: %s", ep.DeltaTime, ep.Event)
 }
 
 /*
@@ -25,6 +33,10 @@ type SysexEventData interface {
 	SysexEventData()
 }
 
+type MetaEventData interface {
+	MetaEventData()
+}
+
 type MidiEvent struct {
 	StatusByte byte
 	SataBytes  MidiEventData
@@ -36,8 +48,14 @@ type SysexEvent struct {
 	Data      SysexEventData
 }
 
-func (event *MidiEvent) Event()       {}
-func (event *SysexEvent) SysexEvent() {}
+type MetaEvent struct {
+	Type byte
+	Data MetaEventData
+}
+
+func (event *MidiEvent) Event()  {}
+func (event *SysexEvent) Event() {}
+func (event *MetaEvent) Event()  {}
 
 // MidiEventData
 
@@ -91,6 +109,37 @@ func (self *PitchBend) PitchBend()                   {}
 
 // Sysex events
 
-type SysexSetTempo struct {
+// TODO
+
+// -- Meta events --
+
+type SetTempo struct {
 	Tempo int
+}
+
+func (self *SetTempo) MetaEventData() {}
+func (self *SetTempo) String() string {
+	return fmt.Sprintf("Tempo: %d", self.Tempo)
+}
+
+type TrackName struct {
+	Name string
+}
+
+func (self *TrackName) MetaEventData() {}
+func (self *TrackName) String() string {
+	return fmt.Sprintf("Track name: %s", self.Name)
+}
+
+type TimeSignature struct {
+	Numerator   byte
+	Denominator byte
+	Clocks      byte
+	Notes       byte
+}
+
+func (self *TimeSignature) MetaEventData() {}
+func (self *TimeSignature) String() string {
+	return fmt.Sprintf("TimeSignature: %d/%d %d %d",
+		self.Numerator, self.Denominator, self.Clocks, self.Notes)
 }

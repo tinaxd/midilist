@@ -19,6 +19,8 @@ func main() {
 			break
 		}
 		fmt.Printf("%s\n", tok.String())
+		p := midi.NewChunkParser(tok)
+		p.ParseMTrk()
 		break
 	}
 	//lexer.TestFunc()
