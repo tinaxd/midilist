@@ -2,6 +2,7 @@ package midi
 
 import (
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -97,7 +98,7 @@ func (cp *ChunkParser) ParseEventPair() (EventPair, error) {
 	//log.Printf("DeltaTime: %d\n", deltaTime)
 	event, err := cp.ParseEvent()
 	if err != nil {
-		return EventPair{}, errors.New("invalid event")
+		return EventPair{}, err
 	}
 	//log.Printf("%v\n", event)
 	return EventPair{uint32(deltaTime), event}, nil
@@ -119,10 +120,11 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 		case 0x06:
 			event, err = cp.parseMetaEventMarker()
 		default:
-			event, err = nil, errors.New("invalid event")
+			msg := fmt.Sprintf("unknown meta event: FF %d", metaType)
+			event, err = nil, errors.New(msg)
 		}
 	} else {
-		event, err = nil, errors.New("invalid event")
+		event, err = nil, errors.New("unknown event")
 	}
 	if err != nil {
 		return nil, err
