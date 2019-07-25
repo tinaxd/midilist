@@ -152,3 +152,10 @@ func (self *Marker) MetaEventData() {}
 func (self *Marker) String() string {
 	return fmt.Sprintf("Marker: %s", self.Name)
 }
+
+type EndOfTrack struct{}
+
+func (self *EndOfTrack) MetaEventData() {}
+func (self *EndOfTrack) String() string {
+	return "End of Track"
+}

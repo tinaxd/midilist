@@ -20,7 +20,7 @@ func NewChunkParser(chunk *Chunk) *ChunkParser {
 
 func (cp *ChunkParser) nextNByte(length uint) []byte {
 	leng := int(length)
-	if len(cp.Chunk.Data) <= cp.pointer+leng {
+	if len(cp.Chunk.Data) < cp.pointer+leng {
 		return nil
 	}
 	ret := cp.Chunk.Data[cp.pointer : cp.pointer+leng]
@@ -119,8 +119,10 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 			event, err = cp.parseMetaEventTimeSignature()
 		case 0x06:
 			event, err = cp.parseMetaEventMarker()
+		case 0x2f:
+			event, err = cp.parseMetaEventEndOfTrack()
 		default:
-			msg := fmt.Sprintf("unknown meta event: FF %d", metaType)
+			msg := fmt.Sprintf("unknown meta event: FF %X", metaType)
 			event, err = nil, errors.New(msg)
 		}
 	} else {
@@ -171,4 +173,12 @@ func (cp *ChunkParser) parseMetaEventMarker() (Event, error) {
 	_, text := cp.parseMetaEventLengthTextHelper()
 	event := MetaEvent{6, &Marker{text}}
 	return &event, nil
+}
+
+func (cp *ChunkParser) parseMetaEventEndOfTrack() (Event, error) {
+	check := cp.nextByte()
+	if check != byte(0) {
+		return &MetaEvent{0x2f, &EndOfTrack{}}, errors.New("invalid End of Track event")
+	}
+	return &MetaEvent{0x2f, &EndOfTrack{}}, nil
 }
