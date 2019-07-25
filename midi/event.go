@@ -53,9 +53,17 @@ type MetaEvent struct {
 	Data MetaEventData
 }
 
-func (event *MidiEvent) Event()  {}
-func (event *SysexEvent) Event() {}
-func (event *MetaEvent) Event()  {}
+type ChannelModeMessage struct {
+	Channel    byte
+	StatusByte byte
+	Message    string
+	Value      byte
+}
+
+func (event *MidiEvent) Event()          {}
+func (event *SysexEvent) Event()         {}
+func (event *MetaEvent) Event()          {}
+func (event *ChannelModeMessage) Event() {}
 
 // MidiEventData
 
@@ -158,4 +166,12 @@ type EndOfTrack struct{}
 func (self *EndOfTrack) MetaEventData() {}
 func (self *EndOfTrack) String() string {
 	return "End of Track"
+}
+
+// Channnel mode messages
+// not type safe (Experimental)
+
+func (mes *ChannelModeMessage) String() string {
+	return fmt.Sprintf("Channel Mode Message Track: %d Type: %X (%s) Value: %d",
+		mes.Channel, mes.StatusByte, mes.Message, mes.Value)
 }

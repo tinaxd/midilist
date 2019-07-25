@@ -7,14 +7,22 @@ import (
 )
 
 type ChunkParser struct {
-	Chunk   *Chunk
-	pointer int
+	Chunk      *Chunk
+	pointer    int
+	ParserData ParserData
+}
+
+type ParserData struct {
+	ChannelModeMessage []struct {
+		StatusByte byte   `yaml:"statusByte"`
+		Message    string `yaml:"message"`
+	} `yaml:"channelModeMessage,flow"`
 }
 
 func NewChunkParser(chunk *Chunk) *ChunkParser {
 	return &ChunkParser{
-		chunk,
-		0,
+		Chunk:   chunk,
+		pointer: 0,
 	}
 }
 
@@ -109,7 +117,7 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 	var event Event
 	var err error
 	if head == 0xFF { // When meta events
-		metaType := cp.nextNByte(1)[0]
+		metaType := cp.nextByte()
 		switch metaType {
 		case 0x51:
 			event, err = cp.parseMetaEventSetTempo()
@@ -125,8 +133,11 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 			msg := fmt.Sprintf("unknown meta event: FF %X", metaType)
 			event, err = nil, errors.New(msg)
 		}
+	} else if 0xB0 <= head && head <= 0xBF { // Channnel mode messages (parse with .yaml file)
+		channel := head - 0xB0
+		event, err = cp.parseChannelModeMessage(channel)
 	} else {
-		event, err = nil, errors.New("unknown event")
+		event, err = nil, fmt.Errorf("unknown event (starts with %X)", head)
 	}
 	if err != nil {
 		return nil, err
@@ -181,4 +192,32 @@ func (cp *ChunkParser) parseMetaEventEndOfTrack() (Event, error) {
 		return &MetaEvent{0x2f, &EndOfTrack{}}, errors.New("invalid End of Track event")
 	}
 	return &MetaEvent{0x2f, &EndOfTrack{}}, nil
+}
+
+func (cp *ChunkParser) parseChannelModeMessage(track byte) (Event, error) {
+	statusByte := cp.nextByte()
+	message, err := cp.searchChannelModeMessageByStatusByte(statusByte)
+	value := cp.nextByte()
+	if err == nil {
+		return &ChannelModeMessage{
+			Channel:    track,
+			Message:    message,
+			StatusByte: statusByte,
+			Value:      value,
+		}, nil
+	}
+	return &ChannelModeMessage{
+		Channel:    track,
+		Message:    "Unknown channel mode message",
+		StatusByte: 0,
+	}, nil
+}
+
+func (cp *ChunkParser) searchChannelModeMessageByStatusByte(statusByte byte) (string, error) {
+	for _, v := range cp.ParserData.ChannelModeMessage {
+		if v.StatusByte == statusByte {
+			return v.Message, nil
+		}
+	}
+	return "", nil
 }

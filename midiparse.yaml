@@ -1,0 +1,5 @@
+channelModeMessage: 
+  - statusByte: 64
+    message: RPN (LSB)
+  - statusByte: 65
+    message: RPN (MSB)
