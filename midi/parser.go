@@ -6,17 +6,39 @@ import (
 	"log"
 )
 
+const (
+	CHANNELVOICEMESSAGE = iota
+	CHANNELMODEMESSAGE
+)
+
 type ChunkParser struct {
-	Chunk      *Chunk
-	pointer    int
-	ParserData ParserData
+	Chunk         *Chunk
+	pointer       int
+	ParserData    ParserData
+	runningStatus runningStatus
+	absoluteTime  uint32
+}
+
+type runningStatus struct {
+	statusByte byte
+	//message     string
+	//messageType int
+	//channel     byte
+	//nValues     uint
 }
 
 type ParserData struct {
 	ChannelModeMessage []struct {
-		StatusByte byte   `yaml:"statusByte"`
+		Controller byte   `yaml:"control"`
 		Message    string `yaml:"message"`
+		//Values     uint   `yaml:"values"`
 	} `yaml:"channelModeMessage,flow"`
+
+	ChannelVoiceMessage []struct {
+		StatusByte byte   `yaml:"statusByte"`
+		NValues    uint   `yaml:"nvalues"`
+		Message    string `yaml:"message"`
+	} `yaml:"channelVoiceMessagemflow"`
 }
 
 func NewChunkParser(chunk *Chunk) *ChunkParser {
@@ -67,7 +89,7 @@ func (cp *ChunkParser) ParseMThd() MidiMeta {
 }
 
 func (cp *ChunkParser) parseVLRep() (uint, error) {
-	var ans uint = 0
+	var ans uint
 	for {
 		vr := cp.nextNByte(1)
 		if vr == nil {
@@ -84,13 +106,17 @@ func (cp *ChunkParser) parseVLRep() (uint, error) {
 	return ans, nil
 }
 
-func (cp *ChunkParser) ParseMTrk() []EventPair {
+func (cp *ChunkParser) ParseMTrk(deltaTime bool) []EventPair {
 	ret := make([]EventPair, 32)
 	for {
 		evpair, err := cp.ParseEventPair()
 		if err != nil {
 			log.Printf("Error Mes: %s", err)
 			break
+		}
+		if !deltaTime {
+			cp.absoluteTime += evpair.DeltaTime
+			evpair.DeltaTime = cp.absoluteTime
 		}
 		log.Printf("Parsed: {%s}", evpair.String())
 		ret = append(ret, evpair)
@@ -133,11 +159,10 @@ func (cp *ChunkParser) ParseEvent() (Event, error) {
 			msg := fmt.Sprintf("unknown meta event: FF %X", metaType)
 			event, err = nil, errors.New(msg)
 		}
-	} else if 0xB0 <= head && head <= 0xBF { // Channnel mode messages (parse with .yaml file)
-		channel := head - 0xB0
-		event, err = cp.parseChannelModeMessage(channel)
-	} else {
-		event, err = nil, fmt.Errorf("unknown event (starts with %X)", head)
+	} else if head >= 0x80 { // Midi events with running status
+		event, err = cp.parseMidiEventWithRunningStatus(head)
+	} else { // Midi events without running status
+		event, err = cp.parseMidiEventWithoutRunningStatus()
 	}
 	if err != nil {
 		return nil, err
@@ -194,30 +219,74 @@ func (cp *ChunkParser) parseMetaEventEndOfTrack() (Event, error) {
 	return &MetaEvent{0x2f, &EndOfTrack{}}, nil
 }
 
-func (cp *ChunkParser) parseChannelModeMessage(track byte) (Event, error) {
-	statusByte := cp.nextByte()
-	message, err := cp.searchChannelModeMessageByStatusByte(statusByte)
-	value := cp.nextByte()
-	if err == nil {
-		return &ChannelModeMessage{
-			Channel:    track,
-			Message:    message,
-			StatusByte: statusByte,
-			Value:      value,
-		}, nil
-	}
-	return &ChannelModeMessage{
-		Channel:    track,
-		Message:    "Unknown channel mode message",
-		StatusByte: 0,
-	}, nil
-}
-
-func (cp *ChunkParser) searchChannelModeMessageByStatusByte(statusByte byte) (string, error) {
-	for _, v := range cp.ParserData.ChannelModeMessage {
-		if v.StatusByte == statusByte {
-			return v.Message, nil
+func (cp *ChunkParser) parseMidiEventWithRunningStatus(runningStatus byte) (Event, error) {
+	channel := runningStatus & 0x0F
+	var event Event
+	if 0xB0 <= runningStatus && runningStatus <= 0xBF { // channel mode messages
+		control := cp.nextByte()
+		message, _, err := cp.getChannelModeMessageByController(control)
+		if err != nil {
+			event = &MidiEvent{
+				runningStatus,
+				"Unknown event",
+				channel,
+				[]byte{},
+			}
+			cp.registerRunningStatus(runningStatus)
+		} else {
+			event = &MidiEvent{
+				runningStatus,
+				message,
+				channel,
+				[]byte{control},
+			}
+			cp.registerRunningStatus(runningStatus)
+		}
+	} else { // channel voice message
+		message, nvalues, err := cp.getChannelVoiceMessageByStatusByte(runningStatus)
+		channel := runningStatus & 0x0F
+		if err != nil {
+			event = &MidiEvent{
+				runningStatus,
+				"Unknown event",
+				channel,
+				[]byte{},
+			}
+		} else {
+			data := cp.nextNByte(nvalues)
+			event = &MidiEvent{
+				runningStatus,
+				message,
+				channel,
+				data,
+			}
 		}
 	}
-	return "", nil
+	return event, nil
+}
+
+func (cp *ChunkParser) parseMidiEventWithoutRunningStatus() (Event, error) {
+	return cp.parseMidiEventWithRunningStatus(cp.runningStatus.statusByte)
+}
+
+func (cp *ChunkParser) registerRunningStatus(control byte) {
+	cp.runningStatus.statusByte = control
+}
+
+func (cp *ChunkParser) getChannelModeMessageByController(controller byte) (string, uint, error) {
+	for _, v := range cp.ParserData.ChannelModeMessage {
+		if v.Controller == controller {
+			return v.Message, 2, nil
+		}
+	}
+	return "", 0, errors.New("Unknown event")
+}
+
+func (cp *ChunkParser) getChannelVoiceMessageByStatusByte(statusByte byte) (string, uint, error) {
+	for _, v := range cp.ParserData.ChannelVoiceMessage {
+		if v.StatusByte == statusByte {
+			return v.Message, v.NValues, nil
+		}
+	}
+	return "", 0, errors.New("Unknown event")
 }

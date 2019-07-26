@@ -48,7 +48,7 @@ func main() {
 		log.Printf("[Track %d]", i)
 		p := midi.NewChunkParser(tok)
 		p.ParserData = parserData
-		p.ParseMTrk()
+		p.ParseMTrk(false)
 		i++
 	}
 	//lexer.TestFunc()

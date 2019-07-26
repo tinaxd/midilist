@@ -39,7 +39,9 @@ type MetaEventData interface {
 
 type MidiEvent struct {
 	StatusByte byte
-	SataBytes  MidiEventData
+	Message    string
+	Channel    byte
+	Values     []byte
 }
 
 type SysexEvent struct {
@@ -171,7 +173,12 @@ func (self *EndOfTrack) String() string {
 // Channnel mode messages
 // not type safe (Experimental)
 
+// deprecated
 func (mes *ChannelModeMessage) String() string {
 	return fmt.Sprintf("Channel Mode Message Track: %d Type: %X (%s) Value: %d",
 		mes.Channel, mes.StatusByte, mes.Message, mes.Value)
+}
+
+func (me *MidiEvent) String() string {
+	return fmt.Sprintf("<Channel %d> %X (%s) [%v]", me.Channel, me.StatusByte, me.Message, me.Values)
 }

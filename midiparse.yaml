@@ -1,5 +1,30 @@
 channelModeMessage: 
-  - statusByte: 64
+  - control: 100
     message: RPN (LSB)
-  - statusByte: 65
+  - control: 101
     message: RPN (MSB)
+  - control: 6
+    message: Data entry (MSB)
+
+channelVoiceMessage:
+  - statusByte: 128
+    nvalues: 2
+    message: Note Off
+  - statusByte: 129
+    nvalues: 2
+    message: Note On
+  - statusByte: 130
+    nvalues: 2
+    message: Polyphonic Key Pressure
+  - statusByte: 131
+    nvalues: 2
+    message: Control Change
+  - statusByte: 132
+    nvalues: 1
+    message: Program Change
+  - statusByte: 133
+    nvalues: 1
+    message: Channel Pressure
+  - statusByte: 134
+    nvalues: 2
+    message: Pitch Bend
