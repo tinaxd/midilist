@@ -180,5 +180,5 @@ func (mes *ChannelModeMessage) String() string {
 }
 
 func (me *MidiEvent) String() string {
-	return fmt.Sprintf("<Channel %d> %X (%s) [%v]", me.Channel, me.StatusByte, me.Message, me.Values)
+	return fmt.Sprintf("<Channel %d> %X (%s) [%v]", me.Channel+1, me.StatusByte, me.Message, me.Values)
 }

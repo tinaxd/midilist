@@ -1,30 +1,109 @@
-channelModeMessage: 
+controlChange: 
   - control: 100
-    message: RPN (LSB)
+    message: RPN LSB
   - control: 101
-    message: RPN (MSB)
+    message: RPN MSB
   - control: 6
-    message: Data entry (MSB)
+    message: Data Entry MSB
+  - control: 38
+    message: Data Entry LSB
+  - control: 120
+    message: All Sound Off
+  - control: 121
+    message: Reset All Controllers
+  - control: 122
+    message: Local Control
+  - control: 123
+    message: All Notes Off
+  - control: 124
+    message: Omni Mode Off
+  - control: 125
+    message: Omni Mode On
+  - control: 126
+    message: Mono Mode On
+  - control: 127
+    message: Poly Mode On
+  - control: 0
+    message: Bank Select (MSB)
+  - control: 1
+    message: Modulation
+  - control: 2
+    message: Breath Controller
+  - control: 4
+    message: Foot Controller
+  - control: 5
+    message: Portamento Time
+  - control: 7
+    message: Channel Volume
+  - control: 8
+    message: Balance
+  - control: 11
+    message: Expression
+  - control: 10
+    message: Pan
+  - control: 12
+    message: Effect Control 1
+  - control: 13
+    message: Effect Control 2
+  - control: 16
+    message: General Purpose Controller 1
+  - control: 17
+    message: General Purpose Controller 2
+  - control: 18
+    message: General Purpose Controller 3
+  - control: 19
+    message: General Purpose Controller 4
+  - control: 32
+    message: Bank Select (LSB)
+  - control: 33
+    message: Modulation (LSB)
+  - control: 34
+    message: Breath Controller (LSB)
+  - control: 36
+    message: Foot Controller (LSB)
+  - control: 37
+    message: Portamento Time (LSB)
+  - control: 39
+    message: Channel Volume (LSB)
+  - control: 40
+    message: Balance (LSB)
+  - control: 42
+    message: Pan (LSB)
+  - control: 43
+    message: Expression (LSB)
+  - control: 44
+    message: Effect Control 1 (LSB)
+  - control: 45
+    message: Effect Control 2 (LSB)
+  - control: 48
+    message: General Purpose Controller 1 (LSB)
+  - control: 49
+    message: General Purpose Controller 2 (LSB)
+  - control: 50
+    message: General Purpose Controller 3 (LSB)
+  - control: 51
+    message: General Purpose Controller 4 (LSB)
+  
 
 channelVoiceMessage:
   - statusByte: 128
     nvalues: 2
     message: Note Off
-  - statusByte: 129
+  - statusByte: 144
     nvalues: 2
     message: Note On
-  - statusByte: 130
+  - statusByte: 160
     nvalues: 2
     message: Polyphonic Key Pressure
-  - statusByte: 131
+  - statusByte: 176
     nvalues: 2
     message: Control Change
-  - statusByte: 132
+  - statusByte: 192
     nvalues: 1
     message: Program Change
-  - statusByte: 133
+  - statusByte: 208
     nvalues: 1
     message: Channel Pressure
-  - statusByte: 134
+  - statusByte: 224
     nvalues: 2
     message: Pitch Bend
