@@ -1,0 +1,6 @@
+*
+
+!qml
+!.gitignore
+!main.go
+!events.go

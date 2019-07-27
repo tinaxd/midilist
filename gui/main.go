@@ -3,36 +3,22 @@ package main
 import (
 	"os"
 
-	"github.com/therecipe/qt/widgets"
+	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/gui"
+	"github.com/therecipe/qt/qml"
+	"github.com/therecipe/qt/quickcontrols2"
 )
 
 func main() {
-	app := widgets.NewQApplication(len(os.Args), os.Args)
+	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
 
-	window := widgets.NewQMainWindow(nil, 0)
-	window.SetMinimumSize2(250, 200)
-	window.SetWindowTitle("Midilist")
+	gui.NewQGuiApplication(len(os.Args), os.Args)
 
-	widget := widgets.NewQWidget(nil, 0)
-	widget.SetLayout(widgets.NewQVBoxLayout())
-	window.SetCentralWidget(widget)
+	quickcontrols2.QQuickStyle_SetStyle("Material")
 
-	// create a line edit
-	// with a custom placeholder text
-	// and add it to the central widgets layout
-	input := widgets.NewQLineEdit(nil)
-	input.SetPlaceholderText("Write something ...")
-	widget.Layout().AddWidget(input)
+	engine := qml.NewQQmlApplicationEngine(nil)
 
-	// create a button
-	// connect the clicked signal
-	// and add it to the central widgets layout
-	button := widgets.NewQPushButton2("and click me!", nil)
-	button.ConnectClicked(func(bool) {
-		widgets.QMessageBox_Information(nil, "OK", input.Text(), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
-	})
-	widget.Layout().AddWidget(button)
+	engine.Load(core.NewQUrl3("qrc:/qml/main.qml", 0))
 
-	window.Show()
-	app.Exec()
+	gui.QGuiApplication_Exec()
 }

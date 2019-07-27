@@ -11,7 +11,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-func main() {
+func main2() {
 	/*
 		p := midi.ParserData{
 			[]struct {
