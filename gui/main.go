@@ -1,24 +1,24 @@
-package main
+package gui
 
 import (
-	"os"
-
-	"github.com/therecipe/qt/core"
-	"github.com/therecipe/qt/gui"
-	"github.com/therecipe/qt/qml"
-	"github.com/therecipe/qt/quickcontrols2"
+	"fyne.io/fyne/app"
+	"fyne.io/fyne/widget"
 )
 
-func main() {
-	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
+func StartGUI() {
+	app := app.New()
 
-	gui.NewQGuiApplication(len(os.Args), os.Args)
+	w := app.NewWindow("Hello")
+	w.SetContent(widget.NewVBox(
+		widget.NewLabel("Hello Fyne!"),
+		widget.NewButton("Quit", func() {
+			app.Quit()
+		}),
+	))
 
-	quickcontrols2.QQuickStyle_SetStyle("Material")
+	w.ShowAndRun()
+}
 
-	engine := qml.NewQQmlApplicationEngine(nil)
+func testDrawPianoRoll(canvas Canvas) {
 
-	engine.Load(core.NewQUrl3("qrc:/qml/main.qml", 0))
-
-	gui.QGuiApplication_Exec()
 }

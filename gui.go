@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	midigui.Main()
+	midigui.StartGUI()
 }
